@@ -9,8 +9,13 @@
 */
 
 
+
+
 #ifndef BLOOM_FILTER
 #define BLOOM_FILTER
+
+
+
 
 #include <algorithm>
 #include <cmath>
@@ -51,8 +56,8 @@ static const bitmap bit_mask[bits_per_char] = {
 class bloom_filter
 {
 public:
-   std::vector<HashFunc*>         hash_;// pointer to hash functions
-   integer           hash_range_;// range of hash function, e.g., if h(x) = y is a hash function, then it is the range of y
+   HashFunc*         hash_;// pointer to hash functions
+   //integer           hash_range_;// range of hash function, e.g., if h(x) = y is a hash function, then it is the range of y
    bitmap*           bit_table_;// the bit array of bloom filter
    integer           hash_count_;// number of hash functions
    large_integer     table_size_;// size of the bit array (in bits)
@@ -63,11 +68,11 @@ public:
    /* create an empty bloom filter */
    bloom_filter()
    {
-    //hash_ = NULL;
+    hash_ = NULL;
     bit_table_ = NULL;
     table_size_ = 0;
     hash_count_ = 0;
-    hash_range_ = 0;
+    //hash_range_ = 0;
     raw_table_size_ = 0;
     inserted_element_count_ = 0;
    }
@@ -87,12 +92,14 @@ public:
     
     
     compute_optimal_parameters(projected_element_count,false_positive_probability);
-    hash_range_ = (integer)(ceil(log(table_size_)));
+    //hash_range_ = (integer)(ceil(log(table_size_)));
     raw_table_size_ = table_size_ / bits_per_char;
     bit_table_ = new bitmap[static_cast<std::size_t>(raw_table_size_)];
     std::fill_n(bit_table_,raw_table_size_,0x00);
     
     //hash_ = new HashFunc[hash_count_];
+	// allocate memory
+	hash_ = static_cast<HashFunc*>(::operator new(sizeof(HashFunc) * hash_count_));
     generate_independent_hashes();
     
    }
@@ -100,11 +107,11 @@ public:
    create bloom filter with bit array size of table_size and number_of_hashes hash functions.
    Note that, here table_size is in log2 format, which means the true table size is 2^table_size
    */  
-   bloom_filter(const integer number_of_hashes,const large_integer table_size)
+   bloom_filter(const integer number_of_hashes,const integer table_size)
    {
-    hash_range_ = table_size;
+    //hash_range_ = table_size;
     hash_count_ = number_of_hashes;
-    table_size_ = 1 << table_size;
+    table_size_ = table_size;
     
     inserted_element_count_ = 0;
     
@@ -112,7 +119,8 @@ public:
     bit_table_ = new bitmap[static_cast<std::size_t>(raw_table_size_)];
     std::fill_n(bit_table_,raw_table_size_,0x00);
     
-    //hash_ = new HashFunc[hash_count_];
+	// allocate memory
+	hash_ = static_cast<HashFunc*>(::operator new(sizeof(HashFunc) * hash_count_));
     generate_independent_hashes();
    }
 
@@ -164,7 +172,13 @@ public:
    virtual ~bloom_filter()
    {
       delete[] bit_table_;
-      hash_.clear();
+	  for (std::size_t i = 0; i < hash_count_; ++i)
+	  {
+		  hash_[i].~HashFunc();
+	  }
+	  ::operator delete(hash_);
+	  //delete[] hash_;
+      //hash_.clear();
    }
 
 
@@ -180,7 +194,7 @@ public:
       std::size_t bit = 0;
       for(std::size_t i = 0;i < hash_count_; ++i)
       {
-        compute_indices((hash_[i])->GetHashValue(key),bit_index,bit);
+        compute_indices((hash_[i]).GetHashValue(key),bit_index,bit);
         bit_table_[bit_index / bits_per_char] |= bit_mask[bit];
       }
       ++inserted_element_count_;  
@@ -192,7 +206,7 @@ public:
       std::size_t bit = 0;
       for (std::size_t i = 0; i < hash_count_; ++i)
       {
-         compute_indices((hash_[i])->GetHashValue(key),bit_index,bit);
+         compute_indices((hash_[i]).GetHashValue(key),bit_index,bit);
          if ((bit_table_[bit_index / bits_per_char] & bit_mask[bit]) != bit_mask[bit])
          {
             return false;
@@ -276,8 +290,10 @@ inline void generate_independent_hashes( )
   {
     for (integer i = 0;i < hash_count_; ++i)
     {
-      HashFunc hf(hash_range_,predef_hash[i]);
-      hash_.push_back(&hf);
+		// invoke constructor
+	 new(&hash_[i]) HashFunc(table_size_, predef_hash[i]);
+      //hash_[i] = new HashFunc(table_size_,predef_hash[i]);
+      //hash_.push_back(&hf);
     }
   }
   else

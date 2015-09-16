@@ -1,9 +1,15 @@
+/*
+Bloom Filter Test
+This file is to check whether the bloom filter is good or not, i.e., to check whether the independence of the hash functions used in the bloom filter.
+*/
 #include <iostream>
 #include <string>
 #include <stdio.h>      /* printf, scanf, puts, NULL */
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <unordered_map>
+#include <fstream>
+#include <iomanip>
 
 #include "bloom_filter.hpp"
 
@@ -12,7 +18,11 @@
 int main()
 {
 
-
+	/* *********************************************************************************************
+	 *                                 Correctness verify                                          *
+	 *                    verify that there is no false negetive                                   *
+	 *                                                                                             *
+	 ********************************************************************************************* */
    // How many elements roughly do we expect to insert?
    unsigned long long int projected_element_count = 1000;
 
@@ -42,9 +52,9 @@ int main()
       // Query the existence of numbers
       for (std::size_t i = 0; i < 100; ++i)
       {
-         if (filter.contains(i))
+         if (!filter.contains(i))
          {
-            std::cout << "BF contains: " << i << std::endl;
+            std::cerr << "BF errors for: " << i << std::endl;
          }
       }
 
@@ -60,53 +70,93 @@ int main()
    }
    
    
-      unsigned int number_of_hashes = 3;
-      unsigned long long int table_size = 10;
-      unsigned long long int number_insert_elements = 50;
-      bloom_filter bf2(number_of_hashes,table_size);
-      //std::cout << "Filter 2 start .." << std::endl;
-   
-   
-      // insert stage
-      //std::vector<int> visited;
-      std::unordered_map<unsigned int,bool> visited;
-      int r;
-      bool flag = false;
-      srand(time(NULL));
-      for(std::size_t i = 0;i < number_insert_elements;++i)
-      {
-         
-         do
-         {
-            r = rand();
-            if(visited.find(r) != visited.end())
-            {
-               flag = true;
-            }
-         }while(flag);
-         flag = false;
-         visited.insert({r,true});
-         bf2.insert(r);
-      }
-      std::cout << "insert finished " << std::endl;
-      
-      // test false positive probability
-      unsigned int test_number = 10000;
-      unsigned int false_positive_count = 0;
-      
-      for(std::size_t i = 0;i < test_number;++i)
-      {
-         r = rand();
-         //std::cout << r << std::endl;
-         if(visited.find(r) == visited.end() && bf2.contains(r))
-         {
-            ++ false_positive_count;
-         }
-      }
-      std::cout << "theoretical fpp: " << bf2.effective_fpp() << std::endl;
-      std::cout << "experimental fpp: " << false_positive_count * 1.0 / test_number << std::endl;
-      
-   
 
+   /* *****************************************************************************************
+    *                    Check the independence of hash functions                             *
+	*                                                                                         *
+	*******************************************************************************************/
+   
+   
+      unsigned int number_of_hashes = 0;
+      unsigned int table_size = 1024;
+      unsigned long long int number_insert_elements = 0;
+
+	  //
+	  std::cout << "Start test the indenpence of the hash functions ...." << std::endl;
+	  srand(time(NULL));
+
+	  std::cout.setf(std::ios::right | std::ios::fixed);
+	  std::cout << std::setw(20) << "number of hashes" 
+		        << std::setw(20) << "element number" 
+		        << std::setw(20) << "theoretical fpp" 
+		        << std::setw(20) << "experimental fpp" 
+		        << std::setw(20) << "relative error" 
+	            << std::endl;
+	  for (number_of_hashes = 2; number_of_hashes <= 10; ++number_of_hashes)
+	  {
+		  number_insert_elements = rand() % 200 + 150;
+		  
+		  
+
+		  //std::cout << "bloom filter (" << table_size << "," << number_of_hashes << ")" << std::endl;
+
+		  for (size_t test_id = 0; test_id < 10; ++test_id)
+		  {
+			  bloom_filter bf2(number_of_hashes, table_size);
+			  
+			  // insert stage
+			  std::unordered_map<unsigned int, bool> visited;
+			  int r;
+			  bool flag = false;
+
+			  for (std::size_t i = 0; i < number_insert_elements; ++i)
+			  {
+
+				  do
+				  {
+					  flag = false;
+					  r = rand();
+					  if (visited.find(r) != visited.end())
+					  {
+						  flag = true;
+					  }
+				  } while (flag);
+				  flag = false;
+				  visited.insert({ r,true });
+				  bf2.insert(r);
+			  }
+
+			  // query stage
+			  unsigned int test_number = (unsigned int) (10000.0 / bf2.effective_fpp());
+			  unsigned int false_positive_count = 0;
+			  for (std::size_t i = 0; i < test_number; ++i)
+			  {
+				  r = rand();
+				  //std::cout << r << std::endl;
+				  if (visited.find(r) == visited.end() && bf2.contains(r))
+				  {
+					  ++false_positive_count;
+				  }
+			  }
+			  double experiment_fpp = false_positive_count * 1.0 / test_number;
+			  
+			  
+			  std::cout << std::setw(20) <<number_of_hashes 
+				        << std::setw(20) << number_insert_elements 
+				        << std::setw(20) << bf2.effective_fpp() 
+				        << std::setw(20) << experiment_fpp  
+				        << std::setw(20) << abs(bf2.effective_fpp() - experiment_fpp) / bf2.effective_fpp() 
+				        << std::endl;
+			  
+
+		  }
+	  }
+
+   
+   
+      
+
+
+   
    return 0;
 }

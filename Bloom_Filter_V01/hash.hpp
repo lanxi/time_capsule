@@ -98,7 +98,9 @@ public:
   }
   
   virtual ~HashFunc()
-  {}
+  {
+	  
+  }
 
   int GetHashValue(unsigned int user_id)
   {
