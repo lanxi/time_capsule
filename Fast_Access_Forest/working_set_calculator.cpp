@@ -68,27 +68,27 @@ int main()
     // record the tree number & forest size (NT: we do not need to check overlapping, since the later entry will automatically overwrite the previous ones)
     forest_size_trace[ts_pre] = forest_size_pre;
     
-
+    
     // read the rest of the input file
     while(inputFile >> ts_cur >> treeId_cur >> tree_size_cur >> forest_size_cur){
         
         //std::cout << "get a point ..." << std::endl;
         forest_size_trace[ts_cur] = forest_size_cur;
-
+        
         
         if (!(ts_cur == ts_pre && treeId_cur == treeId_pre))
         {// if current time_stamp & tree_ID are not the same as last one, we should record last one
             if (tree_size_trace.find(treeId_pre) != tree_size_trace.end())
             {// tree already exists
-            	if (tree_size_trace[treeId_pre].back()->ts != ts_pre)
-            	{
-            		tree_size_trace[treeId_pre].emplace_back(std::make_shared<time_tree_size_pair>(ts_pre,tree_size_pre));
-            	}
-            	else
-            	{// multiple changes at the same time 
-            		tree_size_trace[treeId_pre].back()->tree_size = tree_size_pre;
-            		
-            	}
+                if (tree_size_trace[treeId_pre].back()->ts != ts_pre)
+                {
+                    tree_size_trace[treeId_pre].emplace_back(std::make_shared<time_tree_size_pair>(ts_pre,tree_size_pre));
+                }
+                else
+                {// multiple changes at the same time
+                    tree_size_trace[treeId_pre].back()->tree_size = tree_size_pre;
+                    
+                }
                 
             }
             else
@@ -103,14 +103,14 @@ int main()
         if(inputFile.eof()){// current row is the last one row, we need also record it
             if (tree_size_trace.find(treeId_cur) != tree_size_trace.end())
             {// tree already exists
-            	if (tree_size_trace[treeId_cur].back()->ts != ts_cur)
-            	{
-            		tree_size_trace[treeId_cur].emplace_back(std::make_shared<time_tree_size_pair>(ts_cur,tree_size_cur));
-            	}
-            	else
-            	{
-            		tree_size_trace[treeId_cur].back()->tree_size = tree_size_cur;
-            	}
+                if (tree_size_trace[treeId_cur].back()->ts != ts_cur)
+                {
+                    tree_size_trace[treeId_cur].emplace_back(std::make_shared<time_tree_size_pair>(ts_cur,tree_size_cur));
+                }
+                else
+                {
+                    tree_size_trace[treeId_cur].back()->tree_size = tree_size_cur;
+                }
                 
             }
             else
@@ -161,8 +161,8 @@ int main()
     
     for(double percentage = 0.50;percentage <0.96;percentage += 0.05)
     {
-    	std::cout << "start to calculate working set for " << percentage << std::endl;
-    	
+        std::cout << "start to calculate working set for " << percentage << std::endl;
+        
         std::ofstream tbFile(working_set_file + "-" + std::to_string(int(percentage * 100)));// output file stream
         
         
@@ -182,14 +182,14 @@ int main()
                 {
                     if (del_tree_size == 302788)
                     {
-                       std::cout << (*v_it)->ts << "," << m_it->first << "," << del_tree_size<< std::endl; 
+                        std::cout << (*v_it)->ts << "," << m_it->first << "," << del_tree_size<< std::endl;
                     }
                     
                     del_time = (*v_it)->ts;
                     
                     tbFile << std::setw(columnWidth) << m_it->first
-                           << std::setw(columnWidth) << del_time
-                           << std::endl; 
+                            << std::setw(columnWidth) << del_time
+                            << std::endl;
                     break;
                 }
             }

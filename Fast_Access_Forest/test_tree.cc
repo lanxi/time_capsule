@@ -37,37 +37,5 @@ int main(int, char **)
       cout << *(it) << endl;
       cout << it->getRootId() << endl;
    }
-   /*
-	tree<simple_node>::iterator loc = find(tr.begin(), tr.end(), *(new simple_node(5)));
-   
-	if(loc != tr.end()) {
-      
-      tree<simple_node>::sibling_iterator sib = tr.begin(loc);
-      
-	   while(sib != tr.end(loc)) {
-         
-         cout << (*sib) << endl;
-         
-         ++sib;
-         
-         }
-         
-		cout << endl;
-      
-      tree<simple_node>::iterator sib2 = tr.begin(loc);
-      tree<simple_node>::iterator end2 = tr.end(loc);
-      
-	   while(sib2 != end2) {
-         
-         for(int i=0; i<tr.depth(sib2)-2; ++i) 
-            
-				cout << " ";
-         
-         cout << (*sib2) << endl;
-         
-         ++sib2;
-         
-         }
-	   }*/
       
    }
